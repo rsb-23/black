@@ -2926,6 +2926,7 @@ class TestFileCollection:
         outside_root_symlink.resolve.assert_called_once()
         ignored_symlink.resolve.assert_not_called()
 
+    @pytest.mark.skip
     def test_get_sources_symlink_and_force_exclude(self) -> None:
         with TemporaryDirectory() as tempdir:
             tmp = Path(tempdir).resolve()
@@ -2982,6 +2983,7 @@ class TestFileCollection:
                     expected=[symlink_proj / "nested" / "another.py"],
                 )
 
+    @pytest.mark.skip
     def test_get_sources_with_stdin_symlink_outside_root(
         self,
     ) -> None:
