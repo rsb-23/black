@@ -3,16 +3,16 @@
 
 import os
 from collections.abc import Iterator
-from typing import IO, Any, NoReturn, Union
+from typing import IO, Any, NoReturn
 
 from blib2to3.pgen2 import grammar, token, tokenize
 from blib2to3.pgen2.tokenize import TokenInfo
 
-Path = Union[str, "os.PathLike[str]"]
+Path = str | os.PathLike[str]
 
 
 class PgenGrammar(grammar.Grammar):
-    pass
+    __slots__ = ()
 
 
 class ParserGenerator:
@@ -37,8 +37,7 @@ class ParserGenerator:
 
     def make_grammar(self) -> PgenGrammar:
         c = PgenGrammar()
-        names = list(self.dfas.keys())
-        names.sort()
+        names = sorted(self.dfas.keys())
         names.remove(self.startsymbol)
         names.insert(0, self.startsymbol)
         for name in names:
@@ -49,9 +48,10 @@ class ParserGenerator:
             dfa = self.dfas[name]
             states = []
             for state in dfa:
-                arcs = []
-                for label, next in sorted(state.arcs.items()):
-                    arcs.append((self.make_label(c, label), dfa.index(next)))
+                arcs: list[tuple[int,int]] = [
+                    (self.make_label(c, label), dfa.index(next_))
+                    for label, next_ in sorted(state.arcs.items())
+                ]
                 if state.isfinal:
                     arcs.append((0, dfa.index(state)))
                 states.append(arcs)
@@ -66,7 +66,7 @@ class ParserGenerator:
         first = {}
         for label in sorted(rawfirst):
             ilabel = self.make_label(c, label)
-            ##assert ilabel not in first # XXX failed on <> ... !=
+            # #assert ilabel not in first # XXX failed on <> ... !=
             first[ilabel] = 1
         return first
 
@@ -99,11 +99,7 @@ class ParserGenerator:
             assert label[0] in ('"', "'"), label
             value = eval(label)
             if value[0].isalpha():
-                if label[0] == '"':
-                    keywords = c.soft_keywords
-                else:
-                    keywords = c.keywords
-
+                keywords = c.soft_keywords if label[0] == '"' else c.keywords
                 # A keyword
                 if value in keywords:
                     return keywords[value]
@@ -122,8 +118,7 @@ class ParserGenerator:
                     return ilabel
 
     def addfirstsets(self) -> None:
-        names = list(self.dfas.keys())
-        names.sort()
+        names = sorted(self.dfas.keys())
         for name in names:
             if name not in self.first:
                 self.calcfirst(name)
@@ -145,7 +140,7 @@ class ParserGenerator:
                     self.calcfirst(label)
                     fset = self.first[label]
                     assert fset is not None
-                totalset.update(fset)
+                totalset |= fset
                 overlapcheck[label] = fset
             else:
                 totalset[label] = 1
@@ -204,17 +199,17 @@ class ParserGenerator:
             if state in base:
                 return
             base[state] = 1
-            for label, next in state.arcs:
+            for label, next_ in state.arcs:
                 if label is None:
-                    addclosure(next, base)
+                    addclosure(next_, base)
 
         states = [DFAState(closure(start), finish)]
         for state in states:  # NB states grows while we're iterating
             arcs: dict[str, dict[NFAState, int]] = {}
             for nfastate in state.nfaset:
-                for label, next in nfastate.arcs:
+                for label, next_ in nfastate.arcs:
                     if label is not None:
-                        addclosure(next, arcs.setdefault(label, {}))
+                        addclosure(next_, arcs.setdefault(label, {}))
             for label, nfaset in sorted(arcs.items()):
                 for st in states:
                     if st.nfaset == nfaset:
@@ -362,8 +357,8 @@ class DFAState:
         self.arcs[label] = next
 
     def unifystate(self, old: "DFAState", new: "DFAState") -> None:
-        for label, next in self.arcs.items():
-            if next is old:
+        for label, next_ in self.arcs.items():
+            if next_ is old:
                 self.arcs[label] = new
 
     def __eq__(self, other: Any) -> bool:
@@ -375,10 +370,7 @@ class DFAState:
         # would invoke this method recursively, with cycles...
         if len(self.arcs) != len(other.arcs):
             return False
-        for label, next in self.arcs.items():
-            if next is not other.arcs.get(label):
-                return False
-        return True
+        return all(next_ is other.arcs.get(label) for label, next_ in self.arcs.items())
 
     __hash__: Any = None  # For Py3 compatibility.
 

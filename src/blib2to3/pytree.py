@@ -260,10 +260,7 @@ class Node(Base):
         self.invalidate_sibling_maps()
         if prefix is not None:
             self.prefix = prefix
-        if fixers_applied:
-            self.fixers_applied = fixers_applied[:]
-        else:
-            self.fixers_applied = None
+        self.fixers_applied = fixers_applied[:] if fixers_applied else None
 
     def __repr__(self) -> str:
         """Return a canonical string representation."""
@@ -428,16 +425,17 @@ class Node(Base):
             prev_map[id(after)] = previous
 
     def update_sibling_maps(self) -> None:
-        _prev: dict[int, NL | None] = {}
-        _next: dict[int, NL | None] = {}
-        self.prev_sibling_map = _prev
-        self.next_sibling_map = _next
+        self.prev_sibling_map = {}
+        self.next_sibling_map = {}
         previous: NL | None = None
+
         for current in self.children:
-            _prev[id(current)] = previous
-            _next[id(previous)] = current
+            self.prev_sibling_map[id(current)] = previous
+            self.next_sibling_map[id(previous)] = current
             previous = current
-        _next[id(current)] = None
+
+        if previous is not None:  # if self.children is empty!
+            self.next_sibling_map[id(previous)] = None
 
 
 class Leaf(Base):
@@ -466,7 +464,7 @@ class Leaf(Base):
             value: str,
             context: Context | None = None,
             prefix: str | None = None,
-            fixers_applied: list[Any] = [],
+            fixers_applied: Optional[list[Any]] = None,
             opening_bracket: Optional["Leaf"] = None,
             fmt_pass_converted_first_leaf: Optional["Leaf"] = None,
     ) -> None:
@@ -477,6 +475,9 @@ class Leaf(Base):
         optional context keyword argument.
         """
 
+        # if fixers_applied is None:
+        #     fixers_applied = []
+
         assert 0 <= type < 256, type
         if context is not None:
             self._prefix, (self.lineno, self.column) = context
@@ -484,7 +485,7 @@ class Leaf(Base):
         self.value = value
         if prefix is not None:
             self._prefix = prefix
-        self.fixers_applied: list[Any] | None = fixers_applied[:]
+        self.fixers_applied: list[Any] | None = (fixers_applied or []).copy()
         self.children = []
         self.opening_bracket = opening_bracket
         self.fmt_pass_converted_first_leaf = fmt_pass_converted_first_leaf

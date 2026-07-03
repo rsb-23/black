@@ -2,7 +2,7 @@ import re
 from collections.abc import Collection, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Final, Union
+from typing import Final
 
 from black.mode import Mode
 from black.nodes import (
@@ -22,7 +22,7 @@ from blib2to3.pgen2 import token
 from blib2to3.pytree import Leaf, Node
 
 # types
-LN = Union[Leaf, Node]
+LN = Leaf | Node
 
 FMT_OFF: Final = {"# fmt: off", "# fmt:off", "# yapf: disable"}
 FMT_SKIP: Final = {"# fmt: skip", "# fmt:skip"}
@@ -241,10 +241,7 @@ def _is_valid_standalone_fmt_comment(
     # Treat STANDALONE_COMMENT nodes as whitespace for check
     if is_fmt_off and prev.type not in WHITESPACE and prev.type != STANDALONE_COMMENT:
         return False
-    if is_fmt_skip and prev.type in WHITESPACE:
-        return False
-
-    return True
+    return not is_fmt_skip or prev.type not in WHITESPACE
 
 
 def _handle_comment_only_fmt_block(
@@ -318,12 +315,10 @@ def _handle_comment_only_fmt_block(
     parent = leaf.parent
     assert parent is not None, "INTERNAL ERROR: fmt: on/off handling (prefix only)"
 
-    leaf_idx = None
-    for idx, child in enumerate(parent.children):
-        if child is leaf:
-            leaf_idx = idx
-            break
-
+    leaf_idx = next(
+        (idx for idx, child in enumerate(parent.children) if child is leaf),
+        None,
+    )
     assert leaf_idx is not None, "INTERNAL ERROR: fmt: on/off handling (leaf index)"
 
     parent.insert_child(
@@ -611,10 +606,7 @@ def _find_compound_statement_context(parent: Node) -> Node | None:
     # The statement is still on a single line:
     #     if True: print("a"); print("b")  # fmt: skip
     # Structure: compound_stmt -> simple_stmt
-    if parent.parent.type in _COMPOUND_STATEMENTS:
-        return parent
-
-    return None
+    return parent if parent.parent.type in _COMPOUND_STATEMENTS else None
 
 
 def _should_keep_compound_statement_inline(
@@ -886,11 +878,10 @@ def contains_pragma_comment(comment_list: list[Leaf]) -> bool:
         of the more common static analysis tools for python (e.g. mypy, flake8,
         pylint).
     """
-    for comment in comment_list:
-        if comment.value.startswith(("# type:", "# noqa", "# pylint:")):
-            return True
-
-    return False
+    return any(
+        comment.value.startswith(("# type:", "# noqa", "# pylint:"))
+        for comment in comment_list
+    )
 
 
 def contains_fmt_directive(

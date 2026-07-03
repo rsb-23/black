@@ -36,7 +36,7 @@ from . import grammar, parse, pgen, token, tokenize
 Path = Union[str, "os.PathLike[str]"]
 
 
-@dataclass
+@dataclass(slots=True)
 class ReleaseRange:
     start: int
     end: int | None = None
@@ -48,6 +48,8 @@ class ReleaseRange:
 
 
 class TokenProxy:
+    __slots__ = ("_tokens", "_counter", "_release_ranges", "logger")
+
     def __init__(self, generator: Any) -> None:
         self._tokens = generator
         self._counter = 0
@@ -172,16 +174,14 @@ class Driver:
                 if debug:
                     self.logger.debug("Stop.")
                 break
-            prefix = ""
-            if _type in {token.INDENT, token.DEDENT}:
-                prefix = _prefix
+            prefix = _prefix if _type in {token.INDENT, token.DEDENT} else ""
             lineno, column = end
             # FSTRING_MIDDLE and TSTRING_MIDDLE are the only token that can end with a
             # newline, and `end` will point to the next line. For that case, don't
             # increment lineno.
             if value.endswith("\n") and _type not in (
-                token.FSTRING_MIDDLE,
-                token.TSTRING_MIDDLE,
+                    token.FSTRING_MIDDLE,
+                    token.TSTRING_MIDDLE,
             ):
                 lineno += 1
                 column = 0
@@ -193,7 +193,7 @@ class Driver:
         return p.rootnode
 
     def parse_file(
-        self, filename: Path, encoding: str | None = None, debug: bool = False
+            self, filename: Path, encoding: str | None = None, debug: bool = False
     ) -> NL:
         """Parse a file and return the syntax tree."""
         with open(filename, encoding=encoding) as stream:
@@ -216,7 +216,7 @@ class Driver:
                 if char == "\n":
                     if current_line.strip() and current_column < column:
                         res = "".join(lines)
-                        return res, prefix[len(res) :]
+                        return res, prefix[len(res):]
 
                     lines.append(current_line)
                     current_line = ""
@@ -247,11 +247,11 @@ def _generate_pickle_name(gt: Path, cache_dir: Path | None = None) -> str:
 
 
 def load_grammar(
-    gt: str = "Grammar.txt",
-    gp: str | None = None,
-    save: bool = True,
-    force: bool = False,
-    logger: Logger | None = None,
+        gt: str = "Grammar.txt",
+        gp: str | None = None,
+        save: bool = True,
+        force: bool = False,
+        logger: Logger | None = None,
 ) -> Grammar:
     """Load the grammar (maybe from a pickle)."""
     if logger is None:
@@ -281,7 +281,7 @@ def _newer(a: str, b: str) -> bool:
 
 
 def load_packaged_grammar(
-    package: str, grammar_source: str, cache_dir: Path | None = None
+        package: str, grammar_source: str, cache_dir: Path | None = None
 ) -> grammar.Grammar:
     """Normally, loads a pickled grammar by doing
         pkgutil.get_data(package, pickled_grammar)

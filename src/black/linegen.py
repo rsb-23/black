@@ -1054,13 +1054,12 @@ def _first_right_hand_split(
                     len(str(leaf))
                     for leaf in hugged_opening_leaves + hugged_closing_leaves
                 )
-                if is_line_short_enough(
+
+                # Do not hug if it fits on a single line.
+                should_hug = not is_line_short_enough(
                     inner_body, mode=replace(line.mode, line_length=line_length)
-                ):
-                    # Do not hug if it fits on a single line.
-                    should_hug = False
-                else:
-                    should_hug = True
+                )
+
             if should_hug:
                 body_leaves = inner_body_leaves
                 head_leaves.extend(hugged_opening_leaves)
@@ -1181,11 +1180,11 @@ def _prefer_split_rhs_oop_over_rhs(
         return any(leaf.type == token.COLON for leaf in rhs_oop.tail.leaves)
 
     # the split is right after `=`
-    if not (len(rhs.head.leaves) >= 2 and rhs.head.leaves[-2].type == token.EQUAL):
+    if len(rhs.head.leaves) < 2 or rhs.head.leaves[-2].type != token.EQUAL:
         return True
 
     # the left side of assignment contains brackets
-    if not any(leaf.type in BRACKETS for leaf in rhs.head.leaves[:-1]):
+    if all(leaf.type not in BRACKETS for leaf in rhs.head.leaves[:-1]):
         return True
 
     # the left side of assignment is short enough (the -1 is for the ending optional
@@ -1358,10 +1357,14 @@ def dont_increase_indentation(split_func: Transformer) -> Transformer:
 
 
 def _get_last_non_comment_leaf(line: Line) -> int | None:
-    for leaf_idx in range(len(line.leaves) - 1, 0, -1):
-        if line.leaves[leaf_idx].type != STANDALONE_COMMENT:
-            return leaf_idx
-    return None
+    return next(
+        (
+            leaf_idx
+            for leaf_idx in range(len(line.leaves) - 1, 0, -1)
+            if line.leaves[leaf_idx].type != STANDALONE_COMMENT
+        ),
+        None,
+    )
 
 
 def _can_add_trailing_comma(leaf: Leaf, features: Collection[Feature]) -> bool:
@@ -1860,8 +1863,8 @@ def remove_with_parens(
         for child in node.children:
             if isinstance(child, Node):
                 remove_with_parens(child, node, mode=mode, features=features)
-    elif node.type == syms.asexpr_test and not any(
-        leaf.type == token.COLONEQUAL for leaf in node.leaves()
+    elif node.type == syms.asexpr_test and all(
+        leaf.type != token.COLONEQUAL for leaf in node.leaves()
     ):
         if maybe_make_parens_invisible_in_atom(
             node.children[0],
@@ -1893,11 +1896,10 @@ def _is_atom_multiline(node: LN) -> bool:
     # Check the middle child (between LPAR and RPAR) for newlines in its subtree
     # The first child's prefix contains blank lines/comments before the opening paren
     middle = node.children[1]
-    for child in middle.pre_order():
-        if isinstance(child, Leaf) and "\n" in child.prefix:
-            return True
-
-    return False
+    return any(
+        isinstance(child, Leaf) and "\n" in child.prefix
+        for child in middle.pre_order()
+    )
 
 
 def maybe_make_parens_invisible_in_atom(

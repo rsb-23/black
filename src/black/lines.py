@@ -38,7 +38,7 @@ LeafID = int
 LN = Union[Leaf, Node]
 
 
-@dataclass
+@dataclass(slots=True)
 class Line:
     """Holds leaves and comments. Can be printed with `str(line)`."""
 
@@ -483,22 +483,20 @@ class Line:
             return "\n"
 
         indent = "    " * self.depth
-        leaves = iter(self.leaves)
-        first = next(leaves)
-        comments_iter = itertools.chain.from_iterable(self.comments.values())
-        comments = [str(comment) for comment in comments_iter]
+        first, *rest = self.leaves
 
-        res = [f"{first.prefix}{indent}{first.value}",
-               "".join(str(leaf) for leaf in leaves), "".join(comments), "\n"]
+        rest_str = "".join(map(str, rest))
+        comments_str = "".join(str(c) for group in self.comments.values()
+                               for c in group)
 
-        return "".join(res)
+        return f"{first.prefix}{indent}{first.value}{rest_str}{comments_str}\n"
 
     def __bool__(self) -> bool:
         """Return True if the line has leaves or comments."""
         return bool(self.leaves or self.comments)
 
 
-@dataclass
+@dataclass(slots=True)
 class RHSResult:
     """Intermediate split result from a right hand split."""
 
@@ -509,7 +507,7 @@ class RHSResult:
     closing_bracket: Leaf
 
 
-@dataclass
+@dataclass(slots=True)
 class LinesBlock:
     """Class that holds information about a block of formatted lines.
 
@@ -549,7 +547,7 @@ class _DecoratedFuncInfo(NamedTuple):
     is_multi: bool
 
 
-@dataclass
+@dataclass(slots=True)
 class EmptyLineTracker:
     """Provides a stateful method that returns the number of potential extra
     empty lines needed before and after the currently processed line.

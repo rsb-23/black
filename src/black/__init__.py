@@ -1318,9 +1318,8 @@ def _format_str_once(
     dst_contents = []
     for block in dst_blocks:
         dst_contents.extend(block.all_lines())
-    if not dst_contents:
-        if "\n" in normalized_contents:
-            return newline_type
+    if not dst_contents and "\n" in normalized_contents:
+        return newline_type
     return "".join(dst_contents).replace("\n", newline_type)
 
 

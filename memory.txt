@@ -2,3 +2,4 @@ No Slots     = Current: 63.59 MB; Peak: 75.33 MB
 Slot in Node = Current: 61.94 MB; Peak: 73.67 MB
 Slot in Leaf = Current: 14.13 MB; Peak: 25.87 MB
 Slot in BOTH = Current: 13.30 MB; Peak: 25.04 MB
+Current: 13.28 MB; Peak: 25.02 MB
