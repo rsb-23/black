@@ -168,7 +168,7 @@ class Converter(grammar.Grammar):
         mo = re.match(r"static dfa dfas\[(\d+)\] = {$", line)
         assert mo, (lineno, line)
         ndfas = int(mo.group(1))
-        for i in range(ndfas):
+        for _ in range(ndfas):
             lineno, line = lineno + 1, next(f)
             mo = re.match(r'\s+{(\d+), "(\w+)", (\d+), (\d+), states_(\d+),$', line)
             assert mo, (lineno, line)
@@ -249,8 +249,8 @@ class Converter(grammar.Grammar):
         """Create additional useful structures.  (Internal)."""
         self.keywords = {}  # map from keyword strings to arc labels
         self.tokens = {}  # map from numeric token values to arc labels
-        for ilabel, (type, value) in enumerate(self.labels):
-            if type == token.NAME and value is not None:
+        for ilabel, (_type, value) in enumerate(self.labels):
+            if _type == token.NAME and value is not None:
                 self.keywords[value] = ilabel
             elif value is None:
-                self.tokens[type] = ilabel
+                self.tokens[_type] = ilabel

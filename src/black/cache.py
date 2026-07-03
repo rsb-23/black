@@ -96,8 +96,8 @@ class Cache:
         """Return file data for path."""
 
         stat = path.stat()
-        hash = Cache.hash_digest(path)
-        return FileData(stat.st_mtime, stat.st_size, hash)
+        phash = Cache.hash_digest(path)
+        return FileData(stat.st_mtime, stat.st_size, phash)
 
     def is_changed(self, source: Path) -> bool:
         """Check if source has changed compared to cached version."""

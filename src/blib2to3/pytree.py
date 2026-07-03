@@ -39,7 +39,7 @@ def type_repr(type_num: int) -> str | int:
         # from .pgen2 import token // token.__dict__.items():
         for name in dir(pygram.python_symbols):
             val = getattr(pygram.python_symbols, name)
-            if type(val) == int:
+            if type(val) is int:
                 _type_reprs[val] = name
     return _type_reprs.setdefault(type_num, type_num)
 
@@ -553,16 +553,16 @@ def convert(gr: Grammar, raw_node: RawNode) -> NL:
     grammar rule produces a new complete node, so that the tree is build
     strictly bottom-up.
     """
-    type, value, context, children = raw_node
-    if children or type in gr.number2symbol:
+    _type, value, context, children = raw_node
+    if children or _type in gr.number2symbol:
         # If there's exactly one child, return that child instead of
         # creating a new node.
         assert children is not None
         if len(children) == 1:
             return children[0]
-        return Node(type, children, context=context)
+        return Node(_type, children, context=context)
     else:
-        return Leaf(type, value or "", context=context)
+        return Leaf(_type, value or "", context=context)
 
 
 _Results = dict[str, NL]
@@ -769,10 +769,10 @@ class NodePattern(BasePattern):
             return False
         if len(self.content) != len(node.children):
             return False
-        for subpattern, child in zip(self.content, node.children):
-            if not subpattern.match(child, results):
-                return False
-        return True
+        return all(
+            subpattern.match(child, results)
+            for subpattern, child in zip(self.content, node.children)
+        )
 
 
 class WildcardPattern(BasePattern):
@@ -822,8 +822,8 @@ class WildcardPattern(BasePattern):
         """
         assert 0 <= min <= max <= HUGE, (min, max)
         if content is not None:
-            f = lambda s: tuple(s)
-            wrapped_content = tuple(map(f, content))  # Protect against alterations
+            # f = lambda s: tuple(s)
+            wrapped_content = tuple(map(tuple, content))  # Protect against alterations
             # Check sanity of alternatives
             assert len(wrapped_content), repr(
                 wrapped_content
@@ -957,8 +957,8 @@ class WildcardPattern(BasePattern):
         count = 0
         r = {}  # type: _Results
         done = False
-        max = len(nodes)
-        while not done and count < max:
+        max_nodes = len(nodes)
+        while not done and count < max_nodes:
             done = True
             for leaf in self.content:
                 if leaf[0].match(nodes[count], r):
@@ -1042,7 +1042,7 @@ def generate_matches(
                 yield c0, r0
             else:
                 for c1, r1 in generate_matches(rest, nodes[c0:]):
-                    r = {}
-                    r.update(r0)
-                    r.update(r1)
+                    r: dict[str, Node | Leaf] = {}
+                    r |= r0
+                    r |= r1
                     yield c0 + c1, r

@@ -1191,7 +1191,6 @@ def format_ipynb_string(src_contents: str, *, fast: bool, mode: Mode) -> FileCon
     if not src_contents:
         raise NothingChanged
 
-    trailing_newline = src_contents[-1] == "\n"
     modified = False
     nb = json.loads(src_contents)
     validate_metadata(nb)
@@ -1207,6 +1206,7 @@ def format_ipynb_string(src_contents: str, *, fast: bool, mode: Mode) -> FileCon
                 modified = True
     if modified:
         dst_contents = json.dumps(nb, indent=1, ensure_ascii=False)
+        trailing_newline = src_contents[-1] == "\n"
         if trailing_newline:
             dst_contents = dst_contents + "\n"
         return dst_contents
@@ -1547,7 +1547,7 @@ def is_unpacking_comprehension(node: LN) -> bool:
         return False
 
     first_child = node.children[0]
-    return first_child.type == syms.star_expr or first_child.type == token.DOUBLESTAR
+    return first_child.type in [syms.star_expr, token.DOUBLESTAR]
 
 
 def _contains_asexpr(node: Node | Leaf) -> bool:

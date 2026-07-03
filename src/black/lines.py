@@ -485,13 +485,13 @@ class Line:
         indent = "    " * self.depth
         leaves = iter(self.leaves)
         first = next(leaves)
-        res = f"{first.prefix}{indent}{first.value}"
-        res += "".join(str(leaf) for leaf in leaves)
         comments_iter = itertools.chain.from_iterable(self.comments.values())
         comments = [str(comment) for comment in comments_iter]
-        res += "".join(comments)
 
-        return res + "\n"
+        res = [f"{first.prefix}{indent}{first.value}",
+               "".join(str(leaf) for leaf in leaves), "".join(comments), "\n"]
+
+        return "".join(res)
 
     def __bool__(self) -> bool:
         """Return True if the line has leaves or comments."""
@@ -1431,17 +1431,17 @@ def can_be_split(line: Line) -> bool:
     if leaves[0].type == token.STRING and leaves[1].type == token.DOT:
         call_count = 0
         dot_count = 0
-        next = leaves[-1]
+        next_ = leaves[-1]
         for leaf in leaves[-2::-1]:
             if leaf.type in OPENING_BRACKETS:
-                if next.type not in CLOSING_BRACKETS:
+                if next_.type not in CLOSING_BRACKETS:
                     return False
 
                 call_count += 1
             elif leaf.type == token.DOT:
                 dot_count += 1
             elif leaf.type == token.NAME:
-                if not (next.type == token.DOT or next.type in OPENING_BRACKETS):
+                if not (next_.type == token.DOT or next_.type in OPENING_BRACKETS):
                     return False
 
             elif leaf.type not in CLOSING_BRACKETS:

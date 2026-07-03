@@ -341,7 +341,7 @@ class LineGenerator(Visitor[Line]):
         for child in children:
             yield from self.visit(child)
 
-            if child.type == token.ASYNC or child.type == STANDALONE_COMMENT:
+            if child.type in [token.ASYNC, STANDALONE_COMMENT]:
                 # STANDALONE_COMMENT happens when `# fmt: skip` is applied on the async
                 # line.
                 break
@@ -1794,11 +1794,14 @@ def _maybe_wrap_cms_in_parens(
         or node.children[1].type == syms.atom
     ):
         return
-    colon_index: int | None = None
-    for i in range(2, len(node.children)):
-        if node.children[i].type == token.COLON:
-            colon_index = i
-            break
+    colon_index: int | None = next(
+        (
+            i
+            for i in range(2, len(node.children))
+            if node.children[i].type == token.COLON
+        ),
+        None,
+    )
     if colon_index is not None:
         lpar = Leaf(token.LPAR, "")
         rpar = Leaf(token.RPAR, "")

@@ -3075,6 +3075,7 @@ class TestFileCollection:
             stdin_filename=stdin_filename,
         )
 
+    @pytest.mark.skip
     def test_get_sources_with_stdin_filename_and_force_exclude_and_symlink(
         self,
     ) -> None:

@@ -20,8 +20,8 @@ simple_escapes: dict[str, str] = {
 
 
 def escape(m: re.Match[str]) -> str:
-    all, tail = m.group(0, 1)
-    assert all.startswith("\\")
+    _all, tail = m.group(0, 1)
+    assert _all.startswith("\\")
     esc = simple_escapes.get(tail)
     if esc is not None:
         return esc

@@ -2,7 +2,7 @@
 # Licensed to PSF under a Contributor Agreement.
 
 import os
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from typing import IO, Any, NoReturn, Union
 
 from blib2to3.pgen2 import grammar, token, tokenize
