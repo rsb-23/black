@@ -101,8 +101,7 @@ TOKEN_TYPE_MAP = {
 }
 
 
-class TokenError(Exception):
-    ...
+class TokenError(Exception): ...
 
 
 def transform_whitespace(

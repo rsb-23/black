@@ -1897,8 +1897,7 @@ def _is_atom_multiline(node: LN) -> bool:
     # The first child's prefix contains blank lines/comments before the opening paren
     middle = node.children[1]
     return any(
-        isinstance(child, Leaf) and "\n" in child.prefix
-        for child in middle.pre_order()
+        isinstance(child, Leaf) and "\n" in child.prefix for child in middle.pre_order()
     )
 
 

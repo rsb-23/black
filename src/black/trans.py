@@ -1021,8 +1021,7 @@ class StringParenStripper(StringTransformer):
             # Should not strip parentheses which have comments attached
             # to them.
             should_transform = not any(
-                line.comments_after(leaf)
-                for leaf in (LL[string_idx - 1], LL[rpar_idx])
+                line.comments_after(leaf) for leaf in (LL[string_idx - 1], LL[rpar_idx])
             )
             if should_transform:
                 string_and_rpar_indices.extend((string_idx, rpar_idx))
@@ -1398,12 +1397,10 @@ def _toggle_fexpr_quotes(fstring: str, old_quote: str) -> str:
     parts: list[str] = []
     previous_index = 0
     for start, end in iter_fexpr_spans(fstring):
-        parts.extend(
-            (
-                fstring[previous_index:start],
-                fstring[start:end].replace(old_quote, new_quote),
-            )
-        )
+        parts.extend((
+            fstring[previous_index:start],
+            fstring[start:end].replace(old_quote, new_quote),
+        ))
         previous_index = end
     parts.append(fstring[previous_index:])
     return "".join(parts)

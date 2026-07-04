@@ -2,7 +2,6 @@
 Parse Python code and perform AST validation.
 """
 
-
 import ast
 import contextlib
 import sys

@@ -61,7 +61,8 @@ class Base(ABC):
 
     A node may be a subnode of at most one parent.
     """
-    __slots__ = ('type', "parent", 'children', "was_changed")
+
+    __slots__ = ("type", "parent", "children", "was_changed")
 
     def __init__(self, type_id: int, children: Optional[list[NL]] = None):
         self.type = type_id
@@ -79,8 +80,7 @@ class Base(ABC):
 
     @property
     @abstractmethod
-    def prefix(self) -> str:
-        ...
+    def prefix(self) -> str: ...
 
     @abstractmethod
     def _eq(self: _P, other: _P) -> bool:
@@ -140,7 +140,7 @@ class Base(ABC):
         # call and quadratic when many children are replaced while siblings are
         # read in between (e.g. merging implicitly concatenated strings).
         parent._replace_child_in_sibling_maps(self, new)
-        parent.children[i: i + 1] = new
+        parent.children[i : i + 1] = new
         parent.changed()
         for x in new:
             x.parent = parent
@@ -223,15 +223,16 @@ class Base(ABC):
 
 class Node(Base):
     """Concrete implementation for interior nodes."""
-    __slots__ = ('prev_sibling_map', 'next_sibling_map')
+
+    __slots__ = ("prev_sibling_map", "next_sibling_map")
 
     def __init__(
-            self,
-            type_id: int,
-            children: list[NL],
-            context: Any | None = None,
-            prefix: str | None = None,
-            fixers_applied: list[Any] | None = None,
+        self,
+        type_id: int,
+        children: list[NL],
+        context: Any | None = None,
+        prefix: str | None = None,
+        fixers_applied: list[Any] | None = None,
     ) -> None:
         """
         Initializer.
@@ -430,18 +431,25 @@ class Node(Base):
 class Leaf(Base):
     """Concrete implementation for leaf nodes."""
 
-    __slots__ = ('value', 'bracket_depth', "_prefix", "lineno",
-                 "column", "opening_bracket", "fmt_pass_converted_first_leaf")
+    __slots__ = (
+        "value",
+        "bracket_depth",
+        "_prefix",
+        "lineno",
+        "column",
+        "opening_bracket",
+        "fmt_pass_converted_first_leaf",
+    )
 
     def __init__(
-            self,
-            type_id: int,
-            value: str,
-            context: Context | None = None,
-            prefix: str | None = None,
-            fixers_applied: Optional[list[Any]] = None,
-            opening_bracket: Optional["Leaf"] = None,
-            fmt_pass_converted_first_leaf: Optional["Leaf"] = None,
+        self,
+        type_id: int,
+        value: str,
+        context: Context | None = None,
+        prefix: str | None = None,
+        fixers_applied: Optional[list[Any]] = None,
+        opening_bracket: Optional["Leaf"] = None,
+        fmt_pass_converted_first_leaf: Optional["Leaf"] = None,
     ) -> None:
         """
         Initializer.
@@ -559,9 +567,12 @@ class BasePattern(ABC):
     - NodePattern matches a single node (usually non-leaf);
     - WildcardPattern matches a sequence of nodes of variable length.
     """
+
     __slots__ = ("type", "content", "name")
 
-    def __init__(self, type_id: int | None = None, content: Any = None, name: str | None = None):
+    def __init__(
+        self, type_id: int | None = None, content: Any = None, name: str | None = None
+    ):
         self.type = type_id  # Node type (token if < 256, symbol if >= 256)
         self.content = content  # Optional content matching pattern
         self.name = name  # Optional name used to store match in results dict
@@ -631,10 +642,10 @@ class LeafPattern(BasePattern):
     __slots__ = ()
 
     def __init__(
-            self,
-            type_id: int | None = None,
-            content: str | None = None,
-            name: str | None = None,
+        self,
+        type_id: int | None = None,
+        content: str | None = None,
+        name: str | None = None,
     ) -> None:
         """
         Initializer.  Takes optional type, content, and name.
@@ -679,10 +690,10 @@ class NodePattern(BasePattern):
     __slots__ = ("wildcards",)
 
     def __init__(
-            self,
-            type_id: int | None = None,
-            content: Iterable[str] | None = None,
-            name: str | None = None,
+        self,
+        type_id: int | None = None,
+        content: Iterable[str] | None = None,
+        name: str | None = None,
     ) -> None:
         """
         Initializer.  Takes optional type, content, and name.
@@ -755,14 +766,15 @@ class WildcardPattern(BasePattern):
 
     except it always uses non-greedy matching.
     """
+
     __slots__ = ("min", "max")
 
     def __init__(
-            self,
-            content: str | None = None,
-            min_match: int = 0,
-            max_match: int = HUGE,
-            name: str | None = None,
+        self,
+        content: str | None = None,
+        min_match: int = 0,
+        max_match: int = HUGE,
+        name: str | None = None,
     ) -> None:
         """
         Initializer.
@@ -806,9 +818,9 @@ class WildcardPattern(BasePattern):
         """Optimize certain stacked wildcard patterns."""
         subpattern = None
         if (
-                self.content is not None
-                and len(self.content) == 1
-                and len(self.content[0]) == 1
+            self.content is not None
+            and len(self.content) == 1
+            and len(self.content[0]) == 1
         ):
             subpattern = self.content[0][0]
         if self.min == 1 and self.max == 1:
@@ -817,10 +829,10 @@ class WildcardPattern(BasePattern):
             if subpattern is not None and self.name == subpattern.name:
                 return subpattern.optimize()
         if (
-                self.min <= 1
-                and isinstance(subpattern, WildcardPattern)
-                and subpattern.min <= 1
-                and self.name == subpattern.name
+            self.min <= 1
+            and isinstance(subpattern, WildcardPattern)
+            and subpattern.min <= 1
+            and self.name == subpattern.name
         ):
             return WildcardPattern(
                 subpattern.content,
@@ -945,7 +957,7 @@ class WildcardPattern(BasePattern):
             for alt in self.content:
                 for c0, r0 in generate_matches(alt, nodes):
                     for c1, r1 in self._recursive_matches(nodes[c0:], count + 1):
-                        r : dict[str, Node | Leaf] = {}
+                        r: dict[str, Node | Leaf] = {}
                         r |= r0
                         r.update(r1)
                         yield c0 + c1, r
@@ -988,7 +1000,7 @@ class NegatedPattern(BasePattern):
 
 
 def generate_matches(
-        patterns: list[BasePattern], nodes: list[NL]
+    patterns: list[BasePattern], nodes: list[NL]
 ) -> Iterator[tuple[int, _Results]]:
     """
     Generator yielding matches for a sequence of patterns and nodes.

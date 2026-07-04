@@ -416,8 +416,11 @@ def whitespace(leaf: Leaf, *, complex_subscript: bool, mode: Mode) -> str:
         if t == token.DOUBLESTAR and is_simple_exponentiation(p):
             return NO
         prevp = preceding_leaf(leaf)
-        if (prevp and prevp.type == token.DOUBLESTAR
-                and (prevp.parent and is_simple_exponentiation(prevp.parent))):
+        if (
+            prevp
+            and prevp.type == token.DOUBLESTAR
+            and (prevp.parent and is_simple_exponentiation(prevp.parent))
+        ):
             return NO
 
     return SPACE

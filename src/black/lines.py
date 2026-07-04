@@ -53,7 +53,7 @@ class Line:
     magic_trailing_comma: Leaf | None = None
 
     def append(
-            self, leaf: Leaf, preformatted: bool = False, track_bracket: bool = False
+        self, leaf: Leaf, preformatted: bool = False, track_bracket: bool = False
     ) -> None:
         """Add a new `leaf` to the end of the line.
 
@@ -100,8 +100,8 @@ class Line:
         or when a standalone comment is not the first leaf on the line.
         """
         if (
-                self.bracket_tracker.depth == 0
-                or self.bracket_tracker.any_open_for_or_lambda()
+            self.bracket_tracker.depth == 0
+            or self.bracket_tracker.any_open_for_or_lambda()
         ):
             if self.is_comment:
                 raise ValueError("cannot append to standalone comments")
@@ -219,7 +219,7 @@ class Line:
         return self.leaves[-1].type == token.COLON
 
     def is_fmt_pass_converted(
-            self, *, first_leaf_matches: Callable[[Leaf], bool] | None = None
+        self, *, first_leaf_matches: Callable[[Leaf], bool] | None = None
     ) -> bool:
         """Is this line converted from fmt off/skip code?
 
@@ -230,8 +230,8 @@ class Line:
             return False
         leaf = self.leaves[0]
         if (
-                leaf.type != STANDALONE_COMMENT
-                or leaf.fmt_pass_converted_first_leaf is None
+            leaf.type != STANDALONE_COMMENT
+            or leaf.fmt_pass_converted_first_leaf is None
         ):
             return False
         return first_leaf_matches is None or first_leaf_matches(
@@ -245,7 +245,7 @@ class Line:
     def contains_implicit_multiline_string_with_comments(self) -> bool:
         """Check if we have an implicit multiline string with comments on the line"""
         for leaf_type, leaf_group_iterator in itertools.groupby(
-                self.leaves, lambda leaf: leaf.type
+            self.leaves, lambda leaf: leaf.type
         ):
             if leaf_type != token.STRING:
                 continue
@@ -263,7 +263,7 @@ class Line:
             last_leaf = self.leaves[-1]
             ignored_ids.add(id(last_leaf))
             if last_leaf.type == token.COMMA or (
-                    last_leaf.type == token.RPAR and not last_leaf.value
+                last_leaf.type == token.RPAR and not last_leaf.value
             ):
                 # When trailing commas or optional parens are inserted by Black for
                 # consistency, comments after the previous last element are not moved
@@ -284,8 +284,8 @@ class Line:
             for comment in comments:
                 if is_type_comment(comment, mode=self.mode):
                     if comment_seen or (
-                            not is_type_ignore_comment(comment, mode=self.mode)
-                            and leaf_id not in ignored_ids
+                        not is_type_ignore_comment(comment, mode=self.mode)
+                        and leaf_id not in ignored_ids
                     ):
                         return True
 
@@ -336,9 +336,9 @@ class Line:
         - it's not a one-tuple
         """
         if not (
-                closing.type in CLOSING_BRACKETS
-                and self.leaves
-                and self.leaves[-1].type == token.COMMA
+            closing.type in CLOSING_BRACKETS
+            and self.leaves
+            and self.leaves[-1].type == token.COMMA
         ):
             return False
 
@@ -367,7 +367,7 @@ class Line:
             return True
 
         if closing.opening_bracket is not None and not is_one_sequence_between(
-                closing.opening_bracket, closing, self.leaves
+            closing.opening_bracket, closing, self.leaves
         ):
             return True
 
@@ -376,8 +376,8 @@ class Line:
     def append_comment(self, comment: Leaf) -> bool:
         """Add an inline or standalone comment to the line."""
         if (
-                comment.type == STANDALONE_COMMENT
-                and self.bracket_tracker.any_open_brackets()
+            comment.type == STANDALONE_COMMENT
+            and self.bracket_tracker.any_open_brackets()
         ):
             comment.prefix = ""
             return False
@@ -392,11 +392,11 @@ class Line:
 
         last_leaf = self.leaves[-1]
         if (
-                last_leaf.type == token.RPAR
-                and not last_leaf.value
-                and last_leaf.parent
-                and len(list(last_leaf.parent.leaves())) <= 3
-                and not is_type_comment(comment, mode=self.mode)
+            last_leaf.type == token.RPAR
+            and not last_leaf.value
+            and last_leaf.parent
+            and len(list(last_leaf.parent.leaves())) <= 3
+            and not is_type_comment(comment, mode=self.mode)
         ):
             # Comments on an optional parens wrapping a single leaf should belong to
             # the wrapped node except if it's a type comment. Pinning the comment like
@@ -442,7 +442,7 @@ class Line:
         )
 
     def enumerate_with_length(
-            self, is_reversed: bool = False
+        self, is_reversed: bool = False
     ) -> Iterator[tuple[Index, Leaf, int]]:
         """Return an enumeration of leaves with their length.
 
@@ -480,8 +480,9 @@ class Line:
         first, *rest = self.leaves
 
         rest_str = "".join(map(str, rest))
-        comments_str = "".join(str(c) for group in self.comments.values()
-                               for c in group)
+        comments_str = "".join(
+            str(c) for group in self.comments.values() for c in group
+        )
 
         return f"{first.prefix}{indent}{first.value}{rest_str}{comments_str}\n"
 
@@ -585,7 +586,7 @@ class EmptyLineTracker:
 
     @staticmethod
     def _find_adjacent_decorated(
-            node: Node | Leaf, *, reverse: bool = False
+        node: Node | Leaf, *, reverse: bool = False
     ) -> Node | None:
         """Walk siblings skipping whitespace tokens, returning the first
         ``decorated`` node found or ``None``."""
@@ -615,7 +616,7 @@ class EmptyLineTracker:
 
     @staticmethod
     def _if_stmt_branch_has_func_named(
-            if_stmt: Node, exclude_suite: Node, name: str
+        if_stmt: Node, exclude_suite: Node, name: str
     ) -> bool:
         """Check if any branch of an ``if_stmt`` (other than *exclude_suite*)
         contains a decorated function with the given *name*."""
@@ -700,7 +701,7 @@ class EmptyLineTracker:
 
     @staticmethod
     def _def_is_followed_by_same_name_decorated_func(
-            line: Line, *, include_conditional_blocks: bool = False
+        line: Line, *, include_conditional_blocks: bool = False
     ) -> bool:
         """Check if a decorated function is followed by a same-name decorated func.
 
@@ -822,7 +823,7 @@ class EmptyLineTracker:
         # Check if the if_stmt's next sibling is a same-name decorated function.
         adjacent = EmptyLineTracker._find_adjacent_decorated(if_stmt)
         if adjacent is not None and EmptyLineTracker._decorated_node_has_func_named(
-                adjacent, func_name
+            adjacent, func_name
         ):
             return True
 
@@ -858,8 +859,8 @@ class EmptyLineTracker:
                 if_stmt, reverse=reverse
             )
             if (
-                    adjacent is not None
-                    and EmptyLineTracker._decorated_node_has_func_named(adjacent, name)
+                adjacent is not None
+                and EmptyLineTracker._decorated_node_has_func_named(adjacent, name)
             ):
                 return True
 
@@ -897,10 +898,10 @@ class EmptyLineTracker:
         # Maintain the semantic_leading_comment state.
         if current_line.is_comment:
             if self.previous_line is None or (
-                    not self.previous_line.is_decorator
-                    # `or before` means this comment already has an empty line before
-                    and (not self.previous_line.is_comment or before)
-                    and (self.semantic_leading_comment is None or before)
+                not self.previous_line.is_decorator
+                # `or before` means this comment already has an empty line before
+                and (not self.previous_line.is_comment or before)
+                and (self.semantic_leading_comment is None or before)
             ):
                 self.semantic_leading_comment = block
         # `or before` means this decorator already has an empty line before
@@ -959,10 +960,10 @@ class EmptyLineTracker:
         if not previous_block:
             return False
         if (
-                len(previous_block.original_line.leaves) != 1
-                or not previous_block.original_line.is_docstring
-                or current_line.is_class
-                or current_line.is_def
+            len(previous_block.original_line.leaves) != 1
+            or not previous_block.original_line.is_docstring
+            or current_line.is_class
+            or current_line.is_def
         ):
             return False
         while previous_block := previous_block.previous_block:
@@ -1113,19 +1114,19 @@ class EmptyLineTracker:
             )
 
         if (
-                self.previous_line.is_import
-                and self.previous_line.depth == 0
-                and current_line.depth == 0
-                and not current_line.is_import
-                and not current_line.is_fmt_pass_converted(first_leaf_matches=is_import)
+            self.previous_line.is_import
+            and self.previous_line.depth == 0
+            and current_line.depth == 0
+            and not current_line.is_import
+            and not current_line.is_fmt_pass_converted(first_leaf_matches=is_import)
         ):
             return 1, 0
 
         if (
-                self.previous_line.is_import
-                and not current_line.is_import
-                and not current_line.is_fmt_pass_converted(first_leaf_matches=is_import)
-                and depth == self.previous_line.depth
+            self.previous_line.is_import
+            and not current_line.is_import
+            and not current_line.is_fmt_pass_converted(first_leaf_matches=is_import)
+            and depth == self.previous_line.depth
         ):
             return (before or 1), 0
 
@@ -1146,7 +1147,7 @@ class EmptyLineTracker:
             return 0, 0
 
         if self.previous_line.depth < current_line.depth and (
-                self.previous_line.is_class or self.previous_line.is_def
+            self.previous_line.is_class or self.previous_line.is_def
         ):
             if self.mode.is_pyi:
                 return 0, 0
@@ -1154,17 +1155,17 @@ class EmptyLineTracker:
 
         comment_to_add_newlines: LinesBlock | None = None
         if (
-                self.previous_line.is_comment
-                and self.previous_line.depth == current_line.depth
-                and before == 0
+            self.previous_line.is_comment
+            and self.previous_line.depth == current_line.depth
+            and before == 0
         ):
             slc = self.semantic_leading_comment
             if (
-                    slc is not None
-                    and slc.previous_block is not None
-                    and not slc.previous_block.original_line.is_class
-                    and not slc.previous_block.original_line.opens_block
-                    and slc.before <= 1
+                slc is not None
+                and slc.previous_block is not None
+                and not slc.previous_block.original_line.is_class
+                and not slc.previous_block.original_line.opens_block
+                and slc.before <= 1
             ):
                 comment_to_add_newlines = slc
             else:
@@ -1190,10 +1191,10 @@ class EmptyLineTracker:
                 else:
                     newlines = 1
             elif (
-                    overload_groups
-                    and self._pyi_previous_decorated_func is not None
-                    and self._pyi_previous_decorated_func.is_multi
-                    and self.previous_line.depth >= current_line.depth
+                overload_groups
+                and self._pyi_previous_decorated_func is not None
+                and self._pyi_previous_decorated_func.is_multi
+                and self.previous_line.depth >= current_line.depth
             ):
                 newlines = 0 if self._is_in_current_group(current_line) else 1
             elif overload_groups and self._is_in_current_group(current_line):
@@ -1216,13 +1217,13 @@ class EmptyLineTracker:
             ):
                 newlines = 1
             elif (
-                    current_line.is_def or current_line.is_decorator
+                current_line.is_def or current_line.is_decorator
             ) and not self.previous_line.is_def:
                 if (
-                        overload_groups
-                        and current_line.is_decorator
-                        and self.previous_line.is_comment
-                        and self._is_decorator_in_conditional_overload(current_line)
+                    overload_groups
+                    and current_line.is_decorator
+                    and self.previous_line.is_comment
+                    and self._is_decorator_in_conditional_overload(current_line)
                 ):
                     # Comment before an overload inside a conditional block:
                     # remove blank lines between the comment and decorator.
@@ -1236,9 +1237,9 @@ class EmptyLineTracker:
                     # decorators) and a block of non-functions
                     newlines = 1
             elif (
-                    Preview.pyi_blank_line_before_decorated_class in self.mode
-                    and current_line.is_decorator
-                    and self._decorator_decorates_class(current_line)
+                Preview.pyi_blank_line_before_decorated_class in self.mode
+                and current_line.is_decorator
+                and self._decorator_decorates_class(current_line)
             ):
                 newlines = 1
             else:
@@ -1268,7 +1269,7 @@ def enumerate_reversed(sequence: Sequence[T]) -> Iterator[tuple[Index, T]]:
 
 
 def append_leaves(
-        new_line: Line, old_line: Line, leaves: list[Leaf], preformatted: bool = False
+    new_line: Line, old_line: Line, leaves: list[Leaf], preformatted: bool = False
 ) -> None:
     """
     Append leaves (taken from @old_line) to @new_line, making sure to fix the
@@ -1357,9 +1358,9 @@ def is_line_short_enough(line: Line, *, mode: Mode, line_str: str = "") -> bool:
             elif leaf.bracket_depth + 1 < len(commas):
                 had_comma = commas.pop()
             if (
-                    had_comma is not None
-                    and multiline_string is not None
-                    and multiline_string.bracket_depth == leaf.bracket_depth + 1
+                had_comma is not None
+                and multiline_string is not None
+                and multiline_string.bracket_depth == leaf.bracket_depth + 1
             ):
                 # Have left the level with the MLS, stop tracking commas
                 max_level_to_update = leaf.bracket_depth
@@ -1373,7 +1374,7 @@ def is_line_short_enough(line: Line, *, mode: Mode, line_str: str = "") -> bool:
             ignore_ctxs: list[LN | None] = [None]
             ignore_ctxs += multiline_string_contexts
             if (line.inside_brackets or leaf.bracket_depth > 0) and (
-                    i != len(line.leaves) - 1 or leaf.prev_sibling not in ignore_ctxs
+                i != len(line.leaves) - 1 or leaf.prev_sibling not in ignore_ctxs
             ):
                 commas[leaf.bracket_depth] += 1
         if max_level_to_update != math.inf:
@@ -1400,8 +1401,8 @@ def is_line_short_enough(line: Line, *, mode: Mode, line_str: str = "") -> bool:
             # large multiline-string-bearing collection (e.g. a dict literal with
             # many triple-quoted values).
             while (
-                    id(first_leaf(ctx)) in line_leaf_ids
-                    and id(last_leaf(ctx)) in line_leaf_ids
+                id(first_leaf(ctx)) in line_leaf_ids
+                and id(last_leaf(ctx)) in line_leaf_ids
             ):
                 multiline_string_contexts.append(ctx)
                 if ctx.parent is None:
@@ -1472,9 +1473,9 @@ def _is_annotated_assignment(head: Line) -> bool:
 
 
 def can_omit_invisible_parens(
-        rhs: RHSResult,
-        line_length: int,
-        mode: Mode,
+    rhs: RHSResult,
+    line_length: int,
+    mode: Mode,
 ) -> bool:
     """Does `rhs.body` have a shape safe to reformat without optional parens around it?
 
@@ -1518,7 +1519,7 @@ def can_omit_invisible_parens(
             # Preserve parens if we have both type: ignore and other comments that
             # could end up on the same line
             if (has_type_ignore_in_head and has_other_comment_in_body) or (
-                    has_other_comment_in_head and has_type_ignore_in_body
+                has_other_comment_in_head and has_type_ignore_in_body
             ):
                 return False
 
@@ -1531,10 +1532,10 @@ def can_omit_invisible_parens(
         if leaf.type == STANDALONE_COMMENT and not closing_bracket:
             return False
         if (
-                not closing_bracket
-                and leaf.type in CLOSING_BRACKETS
-                and leaf.opening_bracket in line.leaves
-                and leaf.value
+            not closing_bracket
+            and leaf.type in CLOSING_BRACKETS
+            and leaf.opening_bracket in line.leaves
+            and leaf.value
         ):
             closing_bracket = leaf
 
@@ -1547,20 +1548,20 @@ def can_omit_invisible_parens(
     # the delimiter_count > 1 early return below, which would otherwise
     # reject bodies with multiple delimiters such as `10 - 5`.
     if (
-            Preview.fix_unnecessary_parens_in_indexed_assignment in mode
-            and len(rhs.head.leaves) >= 3
-            and rhs.head.leaves[-2].type == token.EQUAL
-            # The target must actually end with a subscript: a visible `]`
-            # immediately before the `=`. Invisible parens (e.g. around tuple
-            # targets like `(x,) = ...`) have an empty value and don't count.
-            and rhs.head.leaves[-3].type == token.RSQB
-            and rhs.head.leaves[-3].value
-            # In annotated assignments (`x: dict[str, int] = ...`) the `]` before
-            # the `=` belongs to the annotation; splitting on the annotation's
-            # brackets would be wrong, so leave the optional parens alone.
-            and not _is_annotated_assignment(rhs.head)
-            # The head must be too long to fit, forcing the subscript split.
-            and not is_line_short_enough(rhs.head, mode=mode)
+        Preview.fix_unnecessary_parens_in_indexed_assignment in mode
+        and len(rhs.head.leaves) >= 3
+        and rhs.head.leaves[-2].type == token.EQUAL
+        # The target must actually end with a subscript: a visible `]`
+        # immediately before the `=`. Invisible parens (e.g. around tuple
+        # targets like `(x,) = ...`) have an empty value and don't count.
+        and rhs.head.leaves[-3].type == token.RSQB
+        and rhs.head.leaves[-3].value
+        # In annotated assignments (`x: dict[str, int] = ...`) the `]` before
+        # the `=` belongs to the annotation; splitting on the annotation's
+        # brackets would be wrong, so leave the optional parens alone.
+        and not _is_annotated_assignment(rhs.head)
+        # The head must be too long to fit, forcing the subscript split.
+        and not is_line_short_enough(rhs.head, mode=mode)
     ):
         # 4 extra characters for the `] = ` prefix on the tail line.
         tail_line_length = 4 * line.depth + 4

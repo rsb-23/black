@@ -153,7 +153,17 @@ class Parser:
     reinitialized by calling setup()).
 
     """
-    __slots__ = ("grammar", "convert", "is_backtracking", "last_token", "stack", "rootnode", "used_names", "proxy")
+
+    __slots__ = (
+        "grammar",
+        "convert",
+        "is_backtracking",
+        "last_token",
+        "stack",
+        "rootnode",
+        "used_names",
+        "proxy",
+    )
 
     def __init__(self, grammar: Grammar, convert: Convert | None = None) -> None:
         """Constructor.
