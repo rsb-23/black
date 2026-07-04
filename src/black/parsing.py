@@ -2,7 +2,9 @@
 Parse Python code and perform AST validation.
 """
 
+
 import ast
+import contextlib
 import sys
 import warnings
 from collections.abc import Collection, Iterator
@@ -106,7 +108,7 @@ def lib2to3_parse(
 
     else:
         # Choose the latest version when raising the actual parsing error.
-        assert len(errors) >= 1
+        assert errors
         exc = errors[max(errors)]
         raise exc from None
 
@@ -154,11 +156,8 @@ def parse_ast(src: str) -> ast.AST:
 
     # Try to parse without type comments
     for version in sorted(versions, reverse=True):
-        try:
+        with contextlib.suppress(SyntaxError):
             return _parse_single_version(src, version, type_comments=False)
-        except SyntaxError:
-            pass
-
     raise SyntaxError(first_error)
 
 

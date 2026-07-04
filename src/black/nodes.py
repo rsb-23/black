@@ -267,10 +267,7 @@ def whitespace(leaf: Leaf, *, complex_subscript: bool, mode: Mode) -> str:
             # no space in decorators
             return NO
 
-    elif prev.type in OPENING_BRACKETS:
-        return NO
-
-    elif prev.type == token.BANG:
+    elif prev.type in OPENING_BRACKETS or prev.type == token.BANG:
         return NO
 
     match p.type:
@@ -356,10 +353,7 @@ def whitespace(leaf: Leaf, *, complex_subscript: bool, mode: Mode) -> str:
             # indexing
             if not prev:
                 assert p.parent is not None, "subscripts are always parented"
-                if p.parent.type == syms.subscriptlist:
-                    return SPACE
-
-                return NO
+                return SPACE if p.parent.type == syms.subscriptlist else NO
 
             elif t == token.COLONEQUAL or prev.type == token.COLONEQUAL:
                 return SPACE
@@ -422,9 +416,9 @@ def whitespace(leaf: Leaf, *, complex_subscript: bool, mode: Mode) -> str:
         if t == token.DOUBLESTAR and is_simple_exponentiation(p):
             return NO
         prevp = preceding_leaf(leaf)
-        if prevp and prevp.type == token.DOUBLESTAR:
-            if prevp.parent and is_simple_exponentiation(prevp.parent):
-                return NO
+        if (prevp and prevp.type == token.DOUBLESTAR
+                and (prevp.parent and is_simple_exponentiation(prevp.parent))):
+            return NO
 
     return SPACE
 
@@ -477,10 +471,7 @@ def parent_type(node: LN | None) -> NodeType | None:
             OR
         None, otherwise.
     """
-    if node is None or node.parent is None:
-        return None
-
-    return node.parent.type
+    return None if node is None or node.parent is None else node.parent.type
 
 
 def child_towards(ancestor: Node, descendant: LN) -> LN | None:
@@ -537,10 +528,7 @@ def first_leaf_of(node: LN) -> Leaf | None:
     """Returns the first leaf of the node tree."""
     if isinstance(node, Leaf):
         return node
-    if node.children:
-        return first_leaf_of(node.children[0])
-    else:
-        return None
+    return first_leaf_of(node.children[0]) if node.children else None
 
 
 def is_arith_like(node: LN) -> bool:
@@ -635,10 +623,7 @@ def is_tuple(node: LN) -> bool:
     if node.type != syms.atom:
         return False
     gexp = unwrap_singleton_parenthesis(node)
-    if gexp is None or gexp.type != syms.testlist_gexp:
-        return False
-
-    return True
+    return gexp is not None and gexp.type == syms.testlist_gexp
 
 
 def is_tuple_containing_walrus(node: LN) -> bool:
@@ -767,16 +752,15 @@ def is_simple_decorator_expression(node: LN) -> bool:
     """
     if node.type == token.NAME:
         return True
-    if node.type == syms.power:
-        if node.children:
-            return (
-                node.children[0].type == token.NAME
-                and all(map(is_simple_decorator_trailer, node.children[1:-1]))
-                and (
-                    len(node.children) < 2
-                    or is_simple_decorator_trailer(node.children[-1], last=True)
-                )
+    if node.type == syms.power and node.children:
+        return (
+            node.children[0].type == token.NAME
+            and all(map(is_simple_decorator_trailer, node.children[1:-1]))
+            and (
+                len(node.children) < 2
+                or is_simple_decorator_trailer(node.children[-1], last=True)
             )
+        )
     return False
 
 
@@ -1045,10 +1029,7 @@ def unwrap_singleton_parenthesis(node: LN) -> LN | None:
         return None
 
     lpar, wrapped, rpar = node.children
-    if not (lpar.type == token.LPAR and rpar.type == token.RPAR):
-        return None
-
-    return wrapped
+    return wrapped if lpar.type == token.LPAR and rpar.type == token.RPAR else None
 
 
 def ensure_visible(leaf: Leaf) -> None:

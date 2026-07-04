@@ -70,11 +70,11 @@ class TokenProxy:
         eaten_tokens = self._release_ranges[-1].tokens
         if point < len(eaten_tokens):
             return eaten_tokens[point]
-        else:
-            while point >= len(eaten_tokens):
-                token = next(self._tokens)
-                eaten_tokens.append(token)
-            return token
+
+        while point >= len(eaten_tokens):
+            token = next(self._tokens)
+            eaten_tokens.append(token)
+        return token
 
     def __iter__(self) -> "TokenProxy":
         return self
@@ -224,10 +224,8 @@ class Driver:
                     wait_for_nl = False
             elif char in " \t":
                 current_column += 1
-            elif char == "\n":
+            elif char in ("\f", "\n"):
                 # unexpected empty line
-                current_column = 0
-            elif char == "\f":
                 current_column = 0
             else:
                 # indent is finished

@@ -199,9 +199,7 @@ class Line:
         value = self.leaves[0].value
         if value.startswith(('"""', "'''")):
             return True
-        if value.startswith(("r'''", 'r"""', "R'''", 'R"""')):
-            return True
-        return False
+        return value.startswith(("r'''", 'r"""', "R'''", 'R"""'))
 
     @property
     def is_docstring(self) -> bool:

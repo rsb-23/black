@@ -48,7 +48,7 @@ class ParserGenerator:
             dfa = self.dfas[name]
             states = []
             for state in dfa:
-                arcs: list[tuple[int,int]] = [
+                arcs: list[tuple[int, int]] = [
                     (self.make_label(c, label), dfa.index(next_))
                     for label, next_ in sorted(state.arcs.items())
                 ]

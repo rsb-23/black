@@ -106,10 +106,7 @@ class Recorder:
             raise ParseError("bad input", most_successful_ilabel, value, self.context)
 
         ilabel, *rest = alive_ilabels
-        if force or not rest:
-            return ilabel
-        else:
-            return None
+        return ilabel if force or not rest else None
 
 
 class ParseError(Exception):
@@ -156,7 +153,7 @@ class Parser:
     reinitialized by calling setup()).
 
     """
-    __slots__ = ("grammar", "convert", "is_backtracking", "last_token", "stack", "rootnode","used_names","proxy")
+    __slots__ = ("grammar", "convert", "is_backtracking", "last_token", "stack", "rootnode", "used_names", "proxy")
 
     def __init__(self, grammar: Grammar, convert: Convert | None = None) -> None:
         """Constructor.
@@ -308,15 +305,14 @@ class Parser:
                     return False
 
             else:
-                if (0, state) in arcs:
-                    # An accepting state, pop it and try something else
-                    self.pop()
-                    if not self.stack:
-                        # Done parsing, but another token is input
-                        raise ParseError("too much input", type, value, context)
-                else:
+                if (0, state) not in arcs:
                     # No success finding a transition
                     raise ParseError("bad input", type, value, context)
+                # An accepting state, pop it and try something else
+                self.pop()
+                if not self.stack:
+                    # Done parsing, but another token is input
+                    raise ParseError("too much input", type, value, context)
 
     def classify(self, type: int, value: str, context: Context) -> list[int]:
         """Turn a token into a label.  (Internal)
