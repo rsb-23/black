@@ -223,7 +223,7 @@ class Base(ABC):
 
 class Node(Base):
     """Concrete implementation for interior nodes."""
-    __slots__ = ('fixers_applied', 'used_names', 'prev_sibling_map', 'next_sibling_map')
+    __slots__ = ('prev_sibling_map', 'next_sibling_map')
 
     def __init__(
             self,
@@ -244,14 +244,12 @@ class Node(Base):
         assert type_id >= 256, type_id
 
         super().__init__(type_id, children)
-        self.used_names: set[str] | None = None
         for ch in self.children:
             assert ch.parent is None, repr(ch)
             ch.parent = self
         self.invalidate_sibling_maps()
         if prefix is not None:
             self.prefix = prefix
-        self.fixers_applied = fixers_applied[:] if fixers_applied else None
 
     def __repr__(self) -> str:
         """Return a canonical string representation."""
@@ -279,7 +277,6 @@ class Node(Base):
         return Node(
             self.type,
             [ch.clone() for ch in self.children],
-            fixers_applied=self.fixers_applied,
         )
 
     def post_order(self) -> Iterator[NL]:
@@ -433,8 +430,8 @@ class Node(Base):
 class Leaf(Base):
     """Concrete implementation for leaf nodes."""
 
-    __slots__ = ('value', 'fixers_applied', 'bracket_depth', 'used_names',
-                 "_prefix", "lineno", "column", "opening_bracket", "fmt_pass_converted_first_leaf")
+    __slots__ = ('value', 'bracket_depth', "_prefix", "lineno",
+                 "column", "opening_bracket", "fmt_pass_converted_first_leaf")
 
     def __init__(
             self,
@@ -454,10 +451,8 @@ class Leaf(Base):
         """
         super().__init__(type_id)
         self.value = value
-        self.fixers_applied = fixers_applied
         self.opening_bracket = opening_bracket
         self.bracket_depth: int = 0
-        self.used_names: set[str] | None = None
 
         # If not None, this Leaf is created by converting a block of fmt off/skip
         # code, and `fmt_pass_converted_first_leaf` points to the first Leaf in the
@@ -498,7 +493,6 @@ class Leaf(Base):
             self.type,
             self.value,
             (self.prefix, (self.lineno, self.column)),
-            fixers_applied=self.fixers_applied,
         )
 
     def leaves(self) -> Iterator["Leaf"]:

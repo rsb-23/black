@@ -38,7 +38,7 @@ LeafID = int
 LN = Union[Leaf, Node]
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, eq=False)
 class Line:
     """Holds leaves and comments. Can be printed with `str(line)`."""
 
@@ -492,7 +492,7 @@ class Line:
         return bool(self.leaves or self.comments)
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, eq=False, repr=False)
 class RHSResult:
     """Intermediate split result from a right hand split."""
 
@@ -503,7 +503,7 @@ class RHSResult:
     closing_bracket: Leaf
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, eq=False, repr=False)
 class LinesBlock:
     """Class that holds information about a block of formatted lines.
 
@@ -543,7 +543,7 @@ class _DecoratedFuncInfo(NamedTuple):
     is_multi: bool
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, eq=False, repr=False)
 class EmptyLineTracker:
     """Provides a stateful method that returns the number of potential extra
     empty lines needed before and after the currently processed line.

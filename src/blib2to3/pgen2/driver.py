@@ -36,7 +36,7 @@ from . import grammar, parse, pgen, token, tokenize
 Path = Union[str, "os.PathLike[str]"]
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, eq=False, repr=False)
 class ReleaseRange:
     start: int
     end: int | None = None

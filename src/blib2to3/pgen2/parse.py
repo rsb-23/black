@@ -393,4 +393,3 @@ class Parser:
                 node[-1].append(newnode)
             else:
                 self.rootnode = newnode
-                self.rootnode.used_names = self.used_names
