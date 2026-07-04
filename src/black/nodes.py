@@ -273,148 +273,149 @@ def whitespace(leaf: Leaf, *, complex_subscript: bool, mode: Mode) -> str:
     elif prev.type == token.BANG:
         return NO
 
-    if p.type in {syms.parameters, syms.arglist}:
-        # untyped function signatures or calls
-        if not prev or prev.type != token.COMMA:
-            return NO
-
-    elif p.type == syms.varargslist:
-        # lambdas
-        if prev and prev.type != token.COMMA:
-            return NO
-
-    elif p.type == syms.typedargslist:
-        # typed function signatures
-        if not prev:
-            return NO
-
-        if t == token.EQUAL:
-            if prev.type not in TYPED_NAMES:
+    match p.type:
+        case syms.parameters | syms.arglist:
+            # untyped function signatures or calls
+            if not prev or prev.type != token.COMMA:
                 return NO
 
-        elif prev.type == token.EQUAL:
-            # A bit hacky: if the equal sign has whitespace, it means we
-            # previously found it's a typed argument.  So, we're using that, too.
-            return prev.prefix
+        case syms.varargslist:
+            # lambdas
+            if prev and prev.type != token.COMMA:
+                return NO
 
-        elif prev.type != token.COMMA:
+        case syms.typedargslist:
+            # typed function signatures
+            if not prev:
+                return NO
+
+            if t == token.EQUAL:
+                if prev.type not in TYPED_NAMES:
+                    return NO
+
+            elif prev.type == token.EQUAL:
+                # A bit hacky: if the equal sign has whitespace, it means we
+                # previously found it's a typed argument.  So, we're using that, too.
+                return prev.prefix
+
+            elif prev.type != token.COMMA:
+                return NO
+
+        case int() if p.type in TYPED_NAMES:
+            # type names
+            if not prev:
+                prevp = preceding_leaf(p)
+                if not prevp or prevp.type != token.COMMA:
+                    return NO
+
+        case syms.trailer:
+            # attributes and calls
+            if t in (token.LPAR, token.RPAR):
+                return NO
+
+            if not prev:
+                if t in [token.DOT, token.LSQB]:
+                    return NO
+
+            elif prev.type != token.COMMA:
+                return NO
+
+        case syms.argument:
+            # single argument
+            if t == token.EQUAL:
+                return NO
+
+            if not prev:
+                prevp = preceding_leaf(p)
+                if not prevp or prevp.type == token.LPAR:
+                    return NO
+
+            elif prev.type in {token.EQUAL} | VARARGS_SPECIALS:
+                return NO
+
+        case syms.decorator:
+            # decorators
             return NO
 
-    elif p.type in TYPED_NAMES:
-        # type names
-        if not prev:
+        case syms.dotted_name:
+            if prev:
+                return NO
+
             prevp = preceding_leaf(p)
-            if not prevp or prevp.type != token.COMMA:
+            if not prevp or prevp.type == token.AT or prevp.type == token.DOT:
                 return NO
 
-    elif p.type == syms.trailer:
-        # attributes and calls
-        if t == token.LPAR or t == token.RPAR:
-            return NO
-
-        if not prev:
-            if t == token.DOT or t == token.LSQB:
+        case syms.classdef:
+            if t == token.LPAR:
                 return NO
 
-        elif prev.type != token.COMMA:
-            return NO
-
-    elif p.type == syms.argument:
-        # single argument
-        if t == token.EQUAL:
-            return NO
-
-        if not prev:
-            prevp = preceding_leaf(p)
-            if not prevp or prevp.type == token.LPAR:
+            if prev and prev.type == token.LPAR:
                 return NO
 
-        elif prev.type in {token.EQUAL} | VARARGS_SPECIALS:
-            return NO
+        case syms.subscript | syms.sliceop:
+            # indexing
+            if not prev:
+                assert p.parent is not None, "subscripts are always parented"
+                if p.parent.type == syms.subscriptlist:
+                    return SPACE
 
-    elif p.type == syms.decorator:
-        # decorators
-        return NO
+                return NO
 
-    elif p.type == syms.dotted_name:
-        if prev:
-            return NO
-
-        prevp = preceding_leaf(p)
-        if not prevp or prevp.type == token.AT or prevp.type == token.DOT:
-            return NO
-
-    elif p.type == syms.classdef:
-        if t == token.LPAR:
-            return NO
-
-        if prev and prev.type == token.LPAR:
-            return NO
-
-    elif p.type in {syms.subscript, syms.sliceop}:
-        # indexing
-        if not prev:
-            assert p.parent is not None, "subscripts are always parented"
-            if p.parent.type == syms.subscriptlist:
+            elif t == token.COLONEQUAL or prev.type == token.COLONEQUAL:
                 return SPACE
 
-            return NO
-
-        elif t == token.COLONEQUAL or prev.type == token.COLONEQUAL:
-            return SPACE
-
-        elif not complex_subscript:
-            return NO
-
-    elif p.type == syms.atom:
-        if prev and t == token.DOT:
-            # dots, but not the first one.
-            return NO
-
-    elif p.type == syms.dictsetmaker:
-        # dict unpacking
-        if prev and prev.type == token.DOUBLESTAR:
-            return NO
-
-    elif p.type in {syms.factor, syms.star_expr}:
-        # unary ops
-        if not prev:
-            prevp = preceding_leaf(p)
-            if not prevp or prevp.type in OPENING_BRACKETS:
+            elif not complex_subscript:
                 return NO
 
-            prevp_parent = prevp.parent
-            assert prevp_parent is not None
-            if prevp.type == token.COLON and prevp_parent.type in {
-                syms.subscript,
-                syms.sliceop,
-            }:
+        case syms.atom:
+            if prev and t == token.DOT:
+                # dots, but not the first one.
                 return NO
 
-            elif prevp.type == token.EQUAL and prevp_parent.type == syms.argument:
+        case syms.dictsetmaker:
+            # dict unpacking
+            if prev and prev.type == token.DOUBLESTAR:
                 return NO
 
-        elif t in {token.NAME, token.NUMBER, token.STRING}:
+        case syms.factor | syms.star_expr:
+            # unary ops
+            if not prev:
+                prevp = preceding_leaf(p)
+                if not prevp or prevp.type in OPENING_BRACKETS:
+                    return NO
+
+                prevp_parent = prevp.parent
+                assert prevp_parent is not None
+                if prevp.type == token.COLON and prevp_parent.type in {
+                    syms.subscript,
+                    syms.sliceop,
+                }:
+                    return NO
+
+                elif prevp.type == token.EQUAL and prevp_parent.type == syms.argument:
+                    return NO
+
+            elif t in {token.NAME, token.NUMBER, token.STRING}:
+                return NO
+
+        case syms.import_from:
+            if t == token.DOT:
+                if prev and prev.type == token.DOT:
+                    return NO
+
+            elif t == token.NAME:
+                if v == "import":
+                    return SPACE
+
+                if prev and prev.type == token.DOT:
+                    return NO
+
+        case syms.sliceop:
             return NO
 
-    elif p.type == syms.import_from:
-        if t == token.DOT:
-            if prev and prev.type == token.DOT:
+        case syms.except_clause:
+            if t == token.STAR:
                 return NO
-
-        elif t == token.NAME:
-            if v == "import":
-                return SPACE
-
-            if prev and prev.type == token.DOT:
-                return NO
-
-    elif p.type == syms.sliceop:
-        return NO
-
-    elif p.type == syms.except_clause:
-        if t == token.STAR:
-            return NO
 
     if Preview.simplify_power_operator_hugging in mode:
         # Power operator hugging

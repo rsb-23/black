@@ -1,20 +1,20 @@
 import tracemalloc
-from pathlib import Path
 
 import black
 
 tracemalloc.start()
 
-# Run black on a directory
-# src = Path("/src")
-# mode = black.FileMode()
-# list(black.reformat_many(src, fast=False, mode=mode, write_back=black.WriteBack.YES))
-
-code = Path("profiling/mix_big.py").read_text()
-result = black.format_str(code, mode=black.FileMode())
+data_case = "tests/data/cases"
+files = ("profiling/mix_big.py", f"{data_case}/pep_646.py",
+         f"{data_case}/expression.py")
+for file in files:
+    with open(file) as f:
+        code = f.read()
+    # breakpoint()
+    result = black.format_str(code, mode=black.FileMode())
 
 snapshot = tracemalloc.take_snapshot()
-top_stats = snapshot.statistics('lineno')
+top_stats = snapshot.statistics('traceback')
 
 print("[ Top 10 Memory Allocations ]")
 for stat in top_stats[:10]:

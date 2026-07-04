@@ -1345,21 +1345,13 @@ def decode_bytes(
     if not lines:
         return "", encoding, "\n"
 
-    if lines[0][-2:] == b"\r\n":
-        if b"\r" in lines[0][:-2]:
-            newline = "\r"
-        else:
-            newline = "\r\n"
-    elif lines[0][-1:] == b"\n":
-        if b"\r" in lines[0][:-1]:
-            newline = "\r"
-        else:
-            newline = "\n"
+    line = lines[0]
+    if line[-2:] == b"\r\n":
+        newline = "\r" if b"\r" in line[:-2] else "\r\n"
+    elif line[-1:] == b"\n":
+        newline = "\r" if b"\r" in line[:-1] else "\n"
     else:
-        if b"\r" in lines[0]:
-            newline = "\r"
-        else:
-            newline = "\n"
+        newline = "\r" if b"\r" in line else "\n"
 
     srcbuf.seek(0)
     with io.TextIOWrapper(srcbuf, encoding) as tiow:
@@ -1510,9 +1502,7 @@ def get_features_used(
         elif (
             n.type == syms.except_clause
             and len(n.children) >= 2
-            and (
-                n.children[1].type == token.STAR or n.children[1].type == syms.testlist
-            )
+            and n.children[1].type in (token.STAR, syms.testlist)
         ):
             is_star_except = n.children[1].type == token.STAR
 

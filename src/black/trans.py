@@ -1925,17 +1925,16 @@ class StringSplitter(BaseStringSplitter, CustomSplitMapMixin):
         """
         assert_is_leaf_string(string)
 
-        if "f" in prefix and not fstring_contains_expr(string):
-            new_prefix = prefix.replace("f", "")
-
-            temp = string[len(prefix) :]
-            temp = re.sub(r"\{\{", "{", temp)
-            temp = re.sub(r"\}\}", "}", temp)
-            new_string = temp
-
-            return f"{new_prefix}{new_string}"
-        else:
+        if "f" not in prefix or fstring_contains_expr(string):
             return string
+        new_prefix = prefix.replace("f", "")
+
+        temp = string[len(prefix) :]
+        temp = re.sub(r"\{\{", "{", temp)
+        temp = re.sub(r"\}\}", "}", temp)
+        new_string = temp
+
+        return f"{new_prefix}{new_string}"
 
     def _get_string_operator_leaves(self, leaves: Iterable[Leaf]) -> list[Leaf]:
         LL = list(leaves)
